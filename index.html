@@ -6,6 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Meine Finanzen</title>
+<style>
+  /* Fonts loaded from CDN with offline fallback via service worker */
+</style>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -387,6 +390,9 @@
   /* Scrollbar */
   ::-webkit-scrollbar { width: 0; }
 
+  /* Date input styling */
+  input[type="date"] { color-scheme: dark; }
+
   /* Category Management */
   .cat-section { margin-bottom: 10px; }
   .cat-add-row {
@@ -718,6 +724,11 @@
     </div>
 
     <div class="form-group">
+      <label class="form-label">Datum</label>
+      <input class="form-input" id="entryDate" type="date">
+    </div>
+
+    <div class="form-group">
       <div class="checkbox-row" onclick="toggleFixed()">
         <input type="checkbox" id="entryFixed">
         <label for="entryFixed">⏱ Als Fixkosten / Fixeinnahme speichern</label>
@@ -806,6 +817,11 @@ function totalIncome() { return getMonthEntries().filter(e=>e.type==='income').r
 function totalExpense() { return getMonthEntries().filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0); }
 function balance() { return totalIncome() - totalExpense(); }
 function fmt(n) { return n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'; }
+function fmtDate(d) {
+  if (!d) return '';
+  const [y,m,day] = d.split('-');
+  return `${day}.${m}.${y}`;
+}
 
 // ─── RENDER ───────────────────────────────────────────────────────────────────
 function render() {
@@ -869,7 +885,7 @@ function renderOverview() {
 
 function renderIncomeList() {
   const el = document.getElementById('incomeList');
-  const items = getMonthEntries().filter(e=>e.type==='income');
+  const items = getMonthEntries().filter(e=>e.type==='income').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   if (!items.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">💰</div>Noch keine Einnahmen erfasst</div>'; return; }
 
   const byCat = {};
@@ -888,6 +904,7 @@ function renderIncomeList() {
           <div class="entry-item">
             <div class="entry-info">
               <div class="entry-name">${e.name}${e.fixedRef?'<span class="entry-badge fix">FIX</span>':''}</div>
+              ${e.date ? `<div class="entry-meta">${fmtDate(e.date)}</div>` : ''}
             </div>
             <div class="entry-right">
               <div class="entry-amount positive">+${fmt(e.amount)}</div>
@@ -900,7 +917,7 @@ function renderIncomeList() {
 
 function renderExpenseList() {
   const el = document.getElementById('expenseList');
-  const items = getMonthEntries().filter(e=>e.type==='expense');
+  const items = getMonthEntries().filter(e=>e.type==='expense').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   if (!items.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🧾</div>Noch keine Ausgaben erfasst</div>'; return; }
 
   const byCat = {};
@@ -919,6 +936,7 @@ function renderExpenseList() {
           <div class="entry-item">
             <div class="entry-info">
               <div class="entry-name">${e.name}${e.fixedRef?'<span class="entry-badge fix">FIX</span>':''}</div>
+              ${e.date ? `<div class="entry-meta">${fmtDate(e.date)}</div>` : ''}
             </div>
             <div class="entry-right">
               <div class="entry-amount negative">-${fmt(e.amount)}</div>
@@ -980,6 +998,12 @@ function openModal() {
   document.getElementById('entryName').value = '';
   document.getElementById('entryAmount').value = '';
   document.getElementById('entryFixed').checked = false;
+  // Set today as default date
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const dd = String(today.getDate()).padStart(2,'0');
+  document.getElementById('entryDate').value = `${yyyy}-${mm}-${dd}`;
   setType('income');
   document.getElementById('modalOverlay').classList.add('open');
 }
@@ -1005,15 +1029,15 @@ function saveEntry() {
   const amount = parseFloat(document.getElementById('entryAmount').value);
   const category = document.getElementById('entryCategory').value;
   const fixed = document.getElementById('entryFixed').checked;
+  const date = document.getElementById('entryDate').value;
 
   if (!name) { alert('Bitte eine Bezeichnung eingeben.'); return; }
   if (!amount || amount <= 0) { alert('Bitte einen gültigen Betrag eingeben.'); return; }
 
-  const entry = { id: Date.now() + Math.random(), name, amount, type: currentType, category, fixed };
+  const entry = { id: Date.now() + Math.random(), name, amount, type: currentType, category, fixed, date };
   if (fixed) {
     entry.month = null;
     entries.push(entry);
-    // also add for current month
     entries.push({ ...entry, id: Date.now()+Math.random(), fixed: false, fixedRef: entry.id, month: currentMonth });
   } else {
     entry.month = currentMonth;
@@ -1096,7 +1120,35 @@ function initPin() {
   } else {
     pinMode = 'unlock';
     document.getElementById('pinSubtitle').textContent = 'PIN eingeben';
+    // Check if currently locked out
+    const lockUntil = parseInt(localStorage.getItem('fin_pin_lock_until') || '0');
+    if (Date.now() < lockUntil) {
+      startLockCountdown();
+    }
   }
+}
+
+function startLockCountdown() {
+  const errEl = document.getElementById('pinError');
+  const keysEl = document.querySelectorAll('.pin-key');
+  keysEl.forEach(k => k.style.opacity = '0.3');
+
+  function tick() {
+    const lockUntil = parseInt(localStorage.getItem('fin_pin_lock_until') || '0');
+    const remaining = Math.ceil((lockUntil - Date.now()) / 1000);
+    if (remaining <= 0) {
+      errEl.textContent = '';
+      keysEl.forEach(k => k.style.opacity = '1');
+      pinInput = ''; updateDots();
+      if (window._lockTimer) { clearInterval(window._lockTimer); window._lockTimer = null; }
+      return;
+    }
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    errEl.innerHTML = `🔒 Gesperrt – bitte warte noch ${m}:${String(s).padStart(2,'0')} min`;
+  }
+  tick();
+  window._lockTimer = setInterval(tick, 1000);
 }
 
 function pinPress(digit) {
@@ -1124,15 +1176,33 @@ function updateDots(state) {
 function handlePinComplete() {
   const storedPin = localStorage.getItem('fin_pin');
   if (pinMode === 'unlock') {
+    // Check lockout
+    const lockUntil = parseInt(localStorage.getItem('fin_pin_lock_until') || '0');
+    if (Date.now() < lockUntil) {
+      pinInput = ''; updateDots();
+      return;
+    }
     if (pinInput === storedPin) {
+      localStorage.removeItem('fin_pin_attempts');
+      localStorage.removeItem('fin_pin_lock_until');
       document.getElementById('pinScreen').classList.add('hidden');
+      if (window._lockTimer) { clearInterval(window._lockTimer); window._lockTimer = null; }
       buildMonthOptions();
       applyFixedToMonth(currentMonth);
       render();
     } else {
       updateDots('error');
-      document.getElementById('pinError').textContent = 'Falscher PIN. Bitte erneut versuchen.';
-      setTimeout(() => { pinInput = ''; updateDots(); }, 800);
+      let attempts = parseInt(localStorage.getItem('fin_pin_attempts') || '0') + 1;
+      localStorage.setItem('fin_pin_attempts', attempts);
+      if (attempts >= 3) {
+        const lockMs = 5 * 60 * 1000; // 5 minutes
+        localStorage.setItem('fin_pin_lock_until', Date.now() + lockMs);
+        localStorage.setItem('fin_pin_attempts', '0');
+        startLockCountdown();
+      } else {
+        document.getElementById('pinError').textContent = `Falscher PIN. Noch ${3 - attempts} Versuch${3-attempts===1?'':'e'}.`;
+        setTimeout(() => { pinInput = ''; updateDots(); }, 800);
+      }
     }
   } else if (pinMode === 'setup-new') {
     pinTemp = pinInput; pinInput = '';
@@ -1174,6 +1244,16 @@ function changePin() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 initPin();
+</script>
+<script>
+// ─── SERVICE WORKER REGISTRATION ─────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('Service Worker registriert:', reg.scope))
+      .catch(err => console.log('Service Worker Fehler:', err));
+  });
+}
 </script>
 </body>
 </html>
