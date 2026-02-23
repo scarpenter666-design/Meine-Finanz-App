@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Meine Finanzen</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3352;
+    --accent: #6ee7b7;
+    --accent2: #f87171;
+    --accent3: #fbbf24;
+    --text: #e8eaf0;
+    --muted: #7a7f9a;
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 100px;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1a1d27 0%, #0f1117 100%);
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+  .app-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .month-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border: 1px solid var(--border);
+  }
+  .month-selector select {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    outline: none;
+    font-weight: 500;
+  }
+  .month-selector select option { background: var(--surface); }
+
+  /* Balance Cards */
+  .balance-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .balance-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+  }
+  .balance-card.highlight {
+    background: linear-gradient(135deg, #1a3a2a 0%, #0f2a1e 100%);
+    border-color: #2d6b4a;
+  }
+  .balance-card.highlight.negative {
+    background: linear-gradient(135deg, #3a1a1a 0%, #2a0f0f 100%);
+    border-color: #6b2d2d;
+  }
+  .balance-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .balance-amount {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .balance-amount.green { color: var(--accent); }
+  .balance-amount.red { color: var(--accent2); }
+  .balance-amount.yellow { color: var(--accent3); }
+
+  /* Nav */
+  .nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 8px 0 20px;
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 10px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    padding: 6px;
+    transition: color 0.2s;
+  }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn svg { width: 22px; height: 22px; }
+
+  /* Main Content */
+  .content { padding: 20px; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Section titles */
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    margin-bottom: 14px;
+    color: var(--text);
+  }
+
+  /* Entry List */
+  .entry-group { margin-bottom: 24px; }
+  .entry-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .entry-group-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+  }
+  .entry-group-total {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .entry-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .entry-info { flex: 1; }
+  .entry-name { font-size: 14px; font-weight: 500; }
+  .entry-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .entry-badge {
+    font-size: 9px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-left: 6px;
+    color: var(--muted);
+  }
+  .entry-badge.fix { color: var(--accent3); border-color: #5a4a1a; background: #2a220a; }
+  .entry-right { display: flex; align-items: center; gap: 10px; }
+  .entry-amount { font-size: 15px; font-weight: 600; }
+  .entry-amount.positive { color: var(--accent); }
+  .entry-amount.negative { color: var(--accent2); }
+  .entry-delete {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px;
+    font-size: 16px;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+  .entry-delete:hover { color: var(--accent2); }
+
+  /* Add Button */
+  .fab {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 54px;
+    height: 54px;
+    background: var(--accent);
+    border-radius: 50%;
+    border: none;
+    color: #0f1117;
+    font-size: 28px;
+    font-weight: 300;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(110, 231, 183, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .fab:active { transform: scale(0.93); box-shadow: 0 2px 10px rgba(110, 231, 183, 0.3); }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: flex-end;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    padding: 24px 20px 40px;
+    width: 100%;
+    border-top: 1px solid var(--border);
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+  .modal-close {
+    float: right;
+    background: var(--surface2);
+    border: none;
+    color: var(--muted);
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Form */
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-input, .form-select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--accent); }
+  .form-select option { background: var(--surface); }
+
+  .toggle-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .toggle-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .toggle-btn.active-income { background: #1a3a2a; border-color: #2d6b4a; color: var(--accent); }
+  .toggle-btn.active-expense { background: #3a1a1a; border-color: #6b2d2d; color: var(--accent2); }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .checkbox-row input { width: 18px; height: 18px; accent-color: var(--accent3); cursor: pointer; }
+  .checkbox-row label { cursor: pointer; font-size: 14px; }
+
+  .submit-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--accent);
+    color: #0f1117;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.2s;
+  }
+  .submit-btn:active { opacity: 0.85; }
+
+  /* Summary page */
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row-label { font-size: 13px; color: var(--muted); }
+  .summary-row-value { font-size: 14px; font-weight: 600; }
+
+  /* Doughnut */
+  .chart-container { position: relative; width: 160px; height: 160px; margin: 0 auto 20px; }
+  canvas#donutChart { width: 100% !important; height: 100% !important; }
+  .chart-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .chart-center-label { font-size: 10px; color: var(--muted); }
+  .chart-center-value { font-size: 17px; font-weight: 700; color: var(--accent); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+  .empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+  /* Separator line */
+  hr.divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 0; }
+
+  /* Category Management */
+  .cat-section { margin-bottom: 10px; }
+  .cat-add-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    align-items: center;
+  }
+  .cat-add-row .form-input { margin: 0; }
+  .cat-add-btn {
+    width: 44px; height: 44px;
+    background: var(--accent);
+    color: #0f1117;
+    border: none;
+    border-radius: 10px;
+    font-size: 22px;
+    font-weight: 400;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: opacity 0.2s;
+  }
+  .cat-add-btn:active { opacity: 0.8; }
+  .cat-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cat-item-name { font-size: 14px; }
+  .cat-item-default { font-size: 10px; color: var(--muted); margin-left: 8px; }
+  .cat-delete {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.2s;
+  }
+  .cat-delete:hover { color: var(--accent2); }
+  .cat-delete:disabled { opacity: 0.2; cursor: not-allowed; }
+
+  /* PIN Screen */
+  .pin-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 30px;
+  }
+  .pin-screen.hidden { display: none; }
+  .pin-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .pin-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 40px;
+    text-align: center;
+  }
+  .pin-dots {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .pin-dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: transparent;
+    transition: all 0.15s;
+  }
+  .pin-dot.filled {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(110,231,183,0.5);
+  }
+  .pin-dot.error {
+    background: var(--accent2);
+    border-color: var(--accent2);
+    animation: shake 0.4s ease;
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+  .pin-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    width: 100%;
+    max-width: 300px;
+  }
+  .pin-key {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 10px;
+    font-size: 22px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.15s, transform 0.1s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pin-key:active { background: var(--surface2); transform: scale(0.93); }
+  .pin-key.del { font-size: 16px; color: var(--muted); }
+  .pin-key.empty { background: transparent; border: none; cursor: default; }
+  .pin-error-msg {
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--accent2);
+    min-height: 20px;
+    text-align: center;
+  }
+  .pin-setup-hint {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.5;
+  }
+  .pin-change-btn {
+    margin-top: 20px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div class="pin-screen" id="pinScreen">
+  <div class="pin-logo">🔐 Meine Finanzen</div>
+  <div class="pin-subtitle" id="pinSubtitle">PIN eingeben</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="dot0"></div>
+    <div class="pin-dot" id="dot1"></div>
+    <div class="pin-dot" id="dot2"></div>
+    <div class="pin-dot" id="dot3"></div>
+  </div>
+  <div class="pin-keypad">
+    <button class="pin-key" onclick="pinPress('1')">1</button>
+    <button class="pin-key" onclick="pinPress('2')">2</button>
+    <button class="pin-key" onclick="pinPress('3')">3</button>
+    <button class="pin-key" onclick="pinPress('4')">4</button>
+    <button class="pin-key" onclick="pinPress('5')">5</button>
+    <button class="pin-key" onclick="pinPress('6')">6</button>
+    <button class="pin-key" onclick="pinPress('7')">7</button>
+    <button class="pin-key" onclick="pinPress('8')">8</button>
+    <button class="pin-key" onclick="pinPress('9')">9</button>
+    <div class="pin-key empty"></div>
+    <button class="pin-key" onclick="pinPress('0')">0</button>
+    <button class="pin-key del" onclick="pinDelete()">⌫</button>
+  </div>
+  <div class="pin-error-msg" id="pinError"></div>
+  <div class="pin-setup-hint" id="pinSetupHint"></div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="app-title">Meine Finanzen</div>
+    <div class="month-selector">
+      <select id="monthSelect" onchange="onMonthChange()"></select>
+    </div>
+  </div>
+  <div class="balance-row">
+    <div class="balance-card">
+      <div class="balance-label">Einnahmen</div>
+      <div class="balance-amount green" id="hdrIncome">0 €</div>
+    </div>
+    <div class="balance-card">
+      <div class="balance-label">Ausgaben</div>
+      <div class="balance-amount red" id="hdrExpense">0 €</div>
+    </div>
+    <div class="balance-card highlight" id="hdrBalanceCard">
+      <div class="balance-label">Verfügbar</div>
+      <div class="balance-amount yellow" id="hdrBalance">0 €</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGES -->
+<div class="content">
+
+  <!-- PAGE: Übersicht -->
+  <div class="page active" id="page-overview">
+    <p class="section-title">Übersicht</p>
+    <div class="summary-card">
+      <div id="summaryRows"></div>
+    </div>
+    <div class="summary-card">
+      <div class="chart-container">
+        <canvas id="donutChart"></canvas>
+        <div class="chart-center">
+          <div class="chart-center-label">Ausgaben</div>
+          <div class="chart-center-value" id="donutTotal">0 €</div>
+        </div>
+      </div>
+      <div class="legend" id="chartLegend"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: Einnahmen -->
+  <div class="page" id="page-income">
+    <p class="section-title">Einnahmen</p>
+    <div id="incomeList"></div>
+  </div>
+
+  <!-- PAGE: Ausgaben -->
+  <div class="page" id="page-expenses">
+    <p class="section-title">Ausgaben</p>
+    <div id="expenseList"></div>
+  </div>
+
+  <!-- PAGE: Fixkosten -->
+  <div class="page" id="page-fixed">
+    <p class="section-title">Fixkosten & Fixeinnahmen</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:18px;">Diese Einträge werden jeden Monat automatisch übernommen.</p>
+    <div id="fixedList"></div>
+  </div>
+
+  <!-- PAGE: Kategorien -->
+  <div class="page" id="page-cats">
+    <p class="section-title">Kategorien</p>
+    <div class="cat-section">
+      <div class="entry-group-header" style="margin-bottom:12px">
+        <div class="entry-group-title">Ausgabe-Kategorien</div>
+      </div>
+      <div id="expenseCatList"></div>
+      <div class="cat-add-row">
+        <input class="form-input" id="newExpenseCat" type="text" placeholder="Neue Kategorie...">
+        <button class="cat-add-btn" onclick="addCategory('expense')">+</button>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="cat-section">
+      <div class="entry-group-header" style="margin-bottom:12px">
+        <div class="entry-group-title">Einnahme-Kategorien</div>
+      </div>
+      <div id="incomeCatList"></div>
+      <div class="cat-add-row">
+        <input class="form-input" id="newIncomeCat" type="text" placeholder="Neue Kategorie...">
+        <button class="cat-add-btn" onclick="addCategory('income')">+</button>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:30px;">
+      <button class="pin-change-btn" onclick="changePin()">🔐 PIN ändern</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fabBtn" onclick="openModal()">+</button>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="showPage('overview',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Übersicht
+  </button>
+  <button class="nav-btn" onclick="showPage('income',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+    Einnahmen
+  </button>
+  <button class="nav-btn" onclick="showPage('expenses',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+    Ausgaben
+  </button>
+  <button class="nav-btn" onclick="showPage('fixed',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Fixkosten
+  </button>
+  <button class="nav-btn" onclick="showPage('cats',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    Kategorien
+  </button>
+</nav>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Eintrag hinzufügen</div>
+
+    <div class="toggle-row">
+      <button class="toggle-btn active-income" id="toggleIncome" onclick="setType('income')">▲ Einnahme</button>
+      <button class="toggle-btn" id="toggleExpense" onclick="setType('expense')">▼ Ausgabe</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Bezeichnung</label>
+      <input class="form-input" id="entryName" type="text" placeholder="z.B. Netflix">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Betrag (€)</label>
+      <input class="form-input" id="entryAmount" type="number" inputmode="decimal" placeholder="0.00" min="0" step="0.01">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Kategorie</label>
+      <select class="form-select" id="entryCategory"></select>
+    </div>
+
+    <div class="form-group">
+      <div class="checkbox-row" onclick="toggleFixed()">
+        <input type="checkbox" id="entryFixed">
+        <label for="entryFixed">⏱ Als Fixkosten / Fixeinnahme speichern</label>
+      </div>
+    </div>
+
+    <button class="submit-btn" onclick="saveEntry()">Speichern</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+const DEFAULT_INCOME_CATS = ['Gehalt / Lohn', 'Bundeswehr', 'Sonstiges'];
+const DEFAULT_EXPENSE_CATS = [
+  'Wohnen & Nebenkosten', 'Lebensmittel', 'Freizeit & Unterhaltung',
+  'Gesundheit', 'Versicherungen', 'Unterhalt', 'KI-Apps',
+  'Shoppen', 'Spenden', 'Fahrkosten'
+];
+let INCOME_CATS = load('fin_income_cats', DEFAULT_INCOME_CATS);
+let EXPENSE_CATS = load('fin_expense_cats', DEFAULT_EXPENSE_CATS);
+
+const COLORS = [
+  '#6ee7b7','#f87171','#fbbf24','#60a5fa','#c084fc',
+  '#fb923c','#34d399','#f472b6','#a78bfa','#38bdf8'
+];
+
+function load(key, def) {
+  try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; }
+}
+function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+// entries: [{id, name, amount, type, category, fixed, month}]
+let entries = load('fin_entries', []);
+let currentMonth = load('fin_month', getCurrentMonth());
+
+function getCurrentMonth() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+// ─── MONTH SELECTOR ───────────────────────────────────────────────────────────
+function buildMonthOptions() {
+  const sel = document.getElementById('monthSelect');
+  sel.innerHTML = '';
+  const now = new Date();
+  for (let i = -3; i <= 2; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label = d.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+    const opt = document.createElement('option');
+    opt.value = val; opt.textContent = label;
+    if (val === currentMonth) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+function onMonthChange() {
+  currentMonth = document.getElementById('monthSelect').value;
+  save('fin_month', currentMonth);
+  applyFixedToMonth(currentMonth);
+  render();
+}
+
+// ─── FIXED ENTRIES ────────────────────────────────────────────────────────────
+function applyFixedToMonth(month) {
+  const fixed = entries.filter(e => e.fixed);
+  fixed.forEach(f => {
+    const exists = entries.some(e => e.month === month && e.fixedRef === f.id);
+    if (!exists) {
+      entries.push({
+        id: Date.now() + Math.random(),
+        name: f.name, amount: f.amount, type: f.type,
+        category: f.category, fixed: false,
+        fixedRef: f.id, month
+      });
+    }
+  });
+  save('fin_entries', entries);
+}
+
+// ─── CALC ─────────────────────────────────────────────────────────────────────
+function getMonthEntries() {
+  return entries.filter(e => !e.fixed && e.month === currentMonth);
+}
+function totalIncome() { return getMonthEntries().filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0); }
+function totalExpense() { return getMonthEntries().filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0); }
+function balance() { return totalIncome() - totalExpense(); }
+function fmt(n) { return n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'; }
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render() {
+  renderHeader();
+  renderOverview();
+  renderIncomeList();
+  renderExpenseList();
+  renderFixedList();
+  renderCatLists();
+}
+
+function renderHeader() {
+  document.getElementById('hdrIncome').textContent = fmt(totalIncome());
+  document.getElementById('hdrExpense').textContent = fmt(totalExpense());
+  const bal = balance();
+  document.getElementById('hdrBalance').textContent = fmt(bal);
+  const card = document.getElementById('hdrBalanceCard');
+  card.className = 'balance-card highlight' + (bal < 0 ? ' negative' : '');
+}
+
+function renderOverview() {
+  // Summary rows
+  const rows = document.getElementById('summaryRows');
+  const inc = totalIncome(), exp = totalExpense(), bal = inc - exp;
+  rows.innerHTML = `
+    <div class="summary-row"><span class="summary-row-label">Gesamteinnahmen</span><span class="summary-row-value" style="color:var(--accent)">${fmt(inc)}</span></div>
+    <div class="summary-row"><span class="summary-row-label">Gesamtausgaben</span><span class="summary-row-value" style="color:var(--accent2)">${fmt(exp)}</span></div>
+    <div class="summary-row"><span class="summary-row-label">Verfügbar</span><span class="summary-row-value" style="color:${bal>=0?'var(--accent3)':'var(--accent2)'}">${fmt(bal)}</span></div>
+  `;
+
+  // Donut chart
+  const expEntries = getMonthEntries().filter(e=>e.type==='expense');
+  const catTotals = {};
+  EXPENSE_CATS.forEach(c => {
+    const t = expEntries.filter(e=>e.category===c).reduce((s,e)=>s+e.amount,0);
+    if (t > 0) catTotals[c] = t;
+  });
+  const labels = Object.keys(catTotals);
+  const data = Object.values(catTotals);
+  const total = data.reduce((a,b)=>a+b,0);
+  document.getElementById('donutTotal').textContent = fmt(total);
+
+  const ctx = document.getElementById('donutChart').getContext('2d');
+  if (window._donut) window._donut.destroy();
+  if (data.length === 0) {
+    ctx.clearRect(0,0,160,160);
+    document.getElementById('chartLegend').innerHTML = '<span style="color:var(--muted);font-size:12px">Noch keine Ausgaben</span>';
+    return;
+  }
+  window._donut = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: COLORS.slice(0,labels.length), borderWidth: 0, hoverOffset: 4 }] },
+    options: { cutout:'72%', plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>`${i.label}: ${fmt(i.raw)}`}}}, animation:{duration:400} }
+  });
+
+  // Legend
+  document.getElementById('chartLegend').innerHTML = labels.map((l,i)=>
+    `<div class="legend-item"><div class="legend-dot" style="background:${COLORS[i]}"></div>${l}</div>`
+  ).join('');
+}
+
+function renderIncomeList() {
+  const el = document.getElementById('incomeList');
+  const items = getMonthEntries().filter(e=>e.type==='income');
+  if (!items.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">💰</div>Noch keine Einnahmen erfasst</div>'; return; }
+
+  const byCat = {};
+  INCOME_CATS.forEach(c => { byCat[c] = items.filter(e=>e.category===c); });
+  el.innerHTML = '';
+  Object.entries(byCat).forEach(([cat, es]) => {
+    if (!es.length) return;
+    const total = es.reduce((s,e)=>s+e.amount,0);
+    el.innerHTML += `
+      <div class="entry-group">
+        <div class="entry-group-header">
+          <div class="entry-group-title">${cat}</div>
+          <div class="entry-group-total" style="color:var(--accent)">${fmt(total)}</div>
+        </div>
+        ${es.map(e=>`
+          <div class="entry-item">
+            <div class="entry-info">
+              <div class="entry-name">${e.name}${e.fixedRef?'<span class="entry-badge fix">FIX</span>':''}</div>
+            </div>
+            <div class="entry-right">
+              <div class="entry-amount positive">+${fmt(e.amount)}</div>
+              <button class="entry-delete" onclick="deleteEntry('${e.id}')">✕</button>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  });
+}
+
+function renderExpenseList() {
+  const el = document.getElementById('expenseList');
+  const items = getMonthEntries().filter(e=>e.type==='expense');
+  if (!items.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🧾</div>Noch keine Ausgaben erfasst</div>'; return; }
+
+  const byCat = {};
+  EXPENSE_CATS.forEach(c => { byCat[c] = items.filter(e=>e.category===c); });
+  el.innerHTML = '';
+  Object.entries(byCat).forEach(([cat, es]) => {
+    if (!es.length) return;
+    const total = es.reduce((s,e)=>s+e.amount,0);
+    el.innerHTML += `
+      <div class="entry-group">
+        <div class="entry-group-header">
+          <div class="entry-group-title">${cat}</div>
+          <div class="entry-group-total" style="color:var(--accent2)">${fmt(total)}</div>
+        </div>
+        ${es.map(e=>`
+          <div class="entry-item">
+            <div class="entry-info">
+              <div class="entry-name">${e.name}${e.fixedRef?'<span class="entry-badge fix">FIX</span>':''}</div>
+            </div>
+            <div class="entry-right">
+              <div class="entry-amount negative">-${fmt(e.amount)}</div>
+              <button class="entry-delete" onclick="deleteEntry('${e.id}')">✕</button>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  });
+}
+
+function renderFixedList() {
+  const el = document.getElementById('fixedList');
+  const fixed = entries.filter(e=>e.fixed);
+  if (!fixed.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">⏱</div>Noch keine Fixposten erfasst</div>'; return; }
+
+  const income = fixed.filter(e=>e.type==='income');
+  const expense = fixed.filter(e=>e.type==='expense');
+  el.innerHTML = '';
+
+  if (income.length) {
+    el.innerHTML += `<div class="entry-group-header" style="margin-bottom:10px"><div class="entry-group-title">Fixeinnahmen</div><div class="entry-group-total" style="color:var(--accent)">${fmt(income.reduce((s,e)=>s+e.amount,0))}</div></div>`;
+    el.innerHTML += income.map(e=>`
+      <div class="entry-item">
+        <div class="entry-info"><div class="entry-name">${e.name}</div><div class="entry-meta">${e.category}</div></div>
+        <div class="entry-right"><div class="entry-amount positive">+${fmt(e.amount)}</div>
+        <button class="entry-delete" onclick="deleteFixed('${e.id}')">✕</button></div>
+      </div>`).join('');
+  }
+  if (income.length && expense.length) el.innerHTML += '<hr class="divider">';
+  if (expense.length) {
+    el.innerHTML += `<div class="entry-group-header" style="margin-bottom:10px"><div class="entry-group-title">Fixausgaben</div><div class="entry-group-total" style="color:var(--accent2)">${fmt(expense.reduce((s,e)=>s+e.amount,0))}</div></div>`;
+    el.innerHTML += expense.map(e=>`
+      <div class="entry-item">
+        <div class="entry-info"><div class="entry-name">${e.name}</div><div class="entry-meta">${e.category}</div></div>
+        <div class="entry-right"><div class="entry-amount negative">-${fmt(e.amount)}</div>
+        <button class="entry-delete" onclick="deleteFixed('${e.id}')">✕</button></div>
+      </div>`).join('');
+  }
+}
+
+// ─── ACTIONS ──────────────────────────────────────────────────────────────────
+function deleteEntry(id) {
+  entries = entries.filter(e => String(e.id) !== String(id));
+  save('fin_entries', entries);
+  render();
+}
+
+function deleteFixed(id) {
+  if (!confirm('Fixposten löschen? Er wird nicht mehr automatisch übernommen.')) return;
+  entries = entries.filter(e => String(e.id) !== String(id) && String(e.fixedRef) !== String(id));
+  save('fin_entries', entries);
+  render();
+}
+
+// ─── MODAL ────────────────────────────────────────────────────────────────────
+let currentType = 'income';
+
+function openModal() {
+  document.getElementById('entryName').value = '';
+  document.getElementById('entryAmount').value = '';
+  document.getElementById('entryFixed').checked = false;
+  setType('income');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function closeModalOutside(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+
+function setType(t) {
+  currentType = t;
+  document.getElementById('toggleIncome').className = 'toggle-btn' + (t==='income'?' active-income':'');
+  document.getElementById('toggleExpense').className = 'toggle-btn' + (t==='expense'?' active-expense':'');
+  const sel = document.getElementById('entryCategory');
+  const cats = t === 'income' ? INCOME_CATS : EXPENSE_CATS;
+  sel.innerHTML = cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+}
+
+function toggleFixed() {
+  const cb = document.getElementById('entryFixed');
+  cb.checked = !cb.checked;
+}
+
+function saveEntry() {
+  const name = document.getElementById('entryName').value.trim();
+  const amount = parseFloat(document.getElementById('entryAmount').value);
+  const category = document.getElementById('entryCategory').value;
+  const fixed = document.getElementById('entryFixed').checked;
+
+  if (!name) { alert('Bitte eine Bezeichnung eingeben.'); return; }
+  if (!amount || amount <= 0) { alert('Bitte einen gültigen Betrag eingeben.'); return; }
+
+  const entry = { id: Date.now() + Math.random(), name, amount, type: currentType, category, fixed };
+  if (fixed) {
+    entry.month = null;
+    entries.push(entry);
+    // also add for current month
+    entries.push({ ...entry, id: Date.now()+Math.random(), fixed: false, fixedRef: entry.id, month: currentMonth });
+  } else {
+    entry.month = currentMonth;
+    entries.push(entry);
+  }
+  save('fin_entries', entries);
+  closeModal();
+  render();
+}
+
+// ─── NAV ──────────────────────────────────────────────────────────────────────
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ─── CATEGORIES ──────────────────────────────────────────────────────────────
+function addCategory(type) {
+  const inputId = type === 'expense' ? 'newExpenseCat' : 'newIncomeCat';
+  const name = document.getElementById(inputId).value.trim();
+  if (!name) return;
+  if (type === 'expense') {
+    if (EXPENSE_CATS.includes(name)) { alert('Diese Kategorie existiert bereits.'); return; }
+    EXPENSE_CATS.push(name);
+    save('fin_expense_cats', EXPENSE_CATS);
+  } else {
+    if (INCOME_CATS.includes(name)) { alert('Diese Kategorie existiert bereits.'); return; }
+    INCOME_CATS.push(name);
+    save('fin_income_cats', INCOME_CATS);
+  }
+  document.getElementById(inputId).value = '';
+  renderCatLists();
+}
+
+function deleteCategory(type, name) {
+  const defaults = type === 'expense' ? DEFAULT_EXPENSE_CATS : DEFAULT_INCOME_CATS;
+  if (defaults.includes(name)) { alert('Standard-Kategorien können nicht gelöscht werden.'); return; }
+  const inUse = entries.some(e => e.category === name);
+  if (inUse && !confirm(`Die Kategorie "${name}" wird noch verwendet. Trotzdem löschen?`)) return;
+  if (type === 'expense') {
+    EXPENSE_CATS = EXPENSE_CATS.filter(c => c !== name);
+    save('fin_expense_cats', EXPENSE_CATS);
+  } else {
+    INCOME_CATS = INCOME_CATS.filter(c => c !== name);
+    save('fin_income_cats', INCOME_CATS);
+  }
+  renderCatLists();
+}
+
+function renderCatLists() {
+  const defaults_e = DEFAULT_EXPENSE_CATS;
+  const defaults_i = DEFAULT_INCOME_CATS;
+
+  document.getElementById('expenseCatList').innerHTML = EXPENSE_CATS.map(c => `
+    <div class="cat-item">
+      <span class="cat-item-name">${c}${defaults_e.includes(c) ? '<span class="cat-item-default">Standard</span>' : ''}</span>
+      <button class="cat-delete" onclick="deleteCategory('expense','${c.replace(/'/g, "\'")}')" ${defaults_e.includes(c) ? 'disabled title="Standard-Kategorie"' : ''}>✕</button>
+    </div>`).join('');
+
+  document.getElementById('incomeCatList').innerHTML = INCOME_CATS.map(c => `
+    <div class="cat-item">
+      <span class="cat-item-name">${c}${defaults_i.includes(c) ? '<span class="cat-item-default">Standard</span>' : ''}</span>
+      <button class="cat-delete" onclick="deleteCategory('income','${c.replace(/'/g, "\'")}')" ${defaults_i.includes(c) ? 'disabled title="Standard-Kategorie"' : ''}>✕</button>
+    </div>`).join('');
+}
+
+// ─── PIN ──────────────────────────────────────────────────────────────────────
+let pinInput = '';
+let pinMode = 'unlock';
+let pinTemp = '';
+
+function initPin() {
+  const storedPin = localStorage.getItem('fin_pin');
+  if (!storedPin) {
+    pinMode = 'setup-new';
+    document.getElementById('pinSubtitle').textContent = 'Wähle einen 4-stelligen PIN';
+    document.getElementById('pinSetupHint').textContent = 'Du wirst beim ersten Start gebeten, einen PIN festzulegen.';
+  } else {
+    pinMode = 'unlock';
+    document.getElementById('pinSubtitle').textContent = 'PIN eingeben';
+  }
+}
+
+function pinPress(digit) {
+  if (pinInput.length >= 4) return;
+  pinInput += digit;
+  updateDots();
+  if (pinInput.length === 4) setTimeout(() => handlePinComplete(), 150);
+}
+
+function pinDelete() {
+  pinInput = pinInput.slice(0, -1);
+  updateDots();
+  document.getElementById('pinError').textContent = '';
+}
+
+function updateDots(state) {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('dot' + i);
+    dot.className = 'pin-dot';
+    if (state === 'error') dot.classList.add('error');
+    else if (i < pinInput.length) dot.classList.add('filled');
+  }
+}
+
+function handlePinComplete() {
+  const storedPin = localStorage.getItem('fin_pin');
+  if (pinMode === 'unlock') {
+    if (pinInput === storedPin) {
+      document.getElementById('pinScreen').classList.add('hidden');
+      buildMonthOptions();
+      applyFixedToMonth(currentMonth);
+      render();
+    } else {
+      updateDots('error');
+      document.getElementById('pinError').textContent = 'Falscher PIN. Bitte erneut versuchen.';
+      setTimeout(() => { pinInput = ''; updateDots(); }, 800);
+    }
+  } else if (pinMode === 'setup-new') {
+    pinTemp = pinInput; pinInput = '';
+    pinMode = 'setup-confirm';
+    document.getElementById('pinSubtitle').textContent = 'PIN bestätigen';
+    document.getElementById('pinSetupHint').textContent = 'Gib deinen PIN noch einmal ein.';
+    document.getElementById('pinError').textContent = '';
+    updateDots();
+  } else if (pinMode === 'setup-confirm') {
+    if (pinInput === pinTemp) {
+      localStorage.setItem('fin_pin', pinInput);
+      document.getElementById('pinScreen').classList.add('hidden');
+      document.getElementById('pinSetupHint').textContent = '';
+      buildMonthOptions();
+      applyFixedToMonth(currentMonth);
+      render();
+    } else {
+      updateDots('error');
+      document.getElementById('pinError').textContent = 'PINs stimmen nicht überein. Nochmal versuchen.';
+      setTimeout(() => {
+        pinInput = ''; pinTemp = ''; pinMode = 'setup-new';
+        document.getElementById('pinSubtitle').textContent = 'Wähle einen 4-stelligen PIN';
+        document.getElementById('pinSetupHint').textContent = '';
+        updateDots();
+      }, 900);
+    }
+  }
+}
+
+function changePin() {
+  pinInput = ''; pinTemp = '';
+  pinMode = 'setup-new';
+  document.getElementById('pinSubtitle').textContent = 'Neuen PIN wählen';
+  document.getElementById('pinSetupHint').textContent = '';
+  document.getElementById('pinError').textContent = '';
+  updateDots();
+  document.getElementById('pinScreen').classList.remove('hidden');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+initPin();
+</script>
+</body>
+</html>
