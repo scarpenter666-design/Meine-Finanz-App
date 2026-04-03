@@ -1,69 +1,47 @@
-// ─── SERVICE WORKER ───────────────────────────────────────────────────────────
-// Version hochzählen wenn du die App aktualisierst, damit der Cache erneuert wird
-const CACHE_NAME = 'meine-finanzen-v1';
+// ── Version erhöhen = Update wird erkannt ──
+const VERSION = 'nutricoach-v6';
+const ASSETS = ['./index.html', './manifest.json', './icon.svg'];
 
-const URLS_TO_CACHE = [
-  './',
-  './index.html',
-  'https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap',
-  'https://fonts.gstatic.com/s/dmseriffdisplay/v15/2Eb7L_JwClR7Zl_UAKZ0mFMV84oZ.woff2',
-  'https://fonts.gstatic.com/s/dmsans/v15/rP2Hp2ywxg089UriCZOIHQ.woff2',
-  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'
-];
-
-// ─── INSTALL: Alles in den Cache laden ────────────────────────────────────────
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      console.log('Cache wird befüllt...');
-      // Einzeln laden damit ein Fehler nicht alles blockiert
-      return Promise.allSettled(
-        URLS_TO_CACHE.map(url =>
-          cache.add(url).catch(err => console.warn('Cache-Fehler für:', url, err))
-        )
-      );
-    }).then(() => self.skipWaiting())
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(VERSION).then(cache => cache.addAll(ASSETS))
   );
+  // NICHT skipWaiting — warten bis Nutzer bestätigt
 });
 
-// ─── ACTIVATE: Alte Caches löschen ────────────────────────────────────────────
-self.addEventListener('activate', event => {
-  event.waitUntil(
+self.addEventListener('activate', e => {
+  e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(key => key !== CACHE_NAME)
-            .map(key => {
-              console.log('Alter Cache gelöscht:', key);
-              return caches.delete(key);
-            })
-      )
-    ).then(() => self.clients.claim())
+      Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)))
+    ).then(() => clients.claim())
   );
 });
 
-// ─── FETCH: Cache zuerst, dann Netzwerk ───────────────────────────────────────
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(cachedResponse => {
-      if (cachedResponse) {
-        // Aus Cache liefern (funktioniert offline)
-        return cachedResponse;
-      }
-      // Nicht im Cache: vom Netzwerk laden und in Cache speichern
-      return fetch(event.request).then(networkResponse => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseClone);
-          });
+// Nutzer bestätigt Update
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Network First — immer frische Version versuchen
+self.addEventListener('fetch', e => {
+  if (e.request.url.includes('api.anthropic.com')) return;
+  if (e.request.url.includes('fonts.googleapis.com')) return;
+  if (e.request.url.includes('fonts.gstatic.com')) return;
+
+  e.respondWith(
+    fetch(e.request)
+      .then(response => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(VERSION).then(cache => cache.put(e.request, clone));
         }
-        return networkResponse;
-      }).catch(() => {
-        // Offline und nicht im Cache: für HTML die App zurückgeben
-        if (event.request.destination === 'document') {
-          return caches.match('./index.html');
-        }
-      });
-    })
+        return response;
+      })
+      .catch(() => {
+        return caches.match(e.request)
+          .then(cached => cached || caches.match('./index.html'));
+      })
   );
 });
