@@ -1,71 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Hintergrund -->
-  <rect width="512" height="512" rx="96" fill="#0f1a0f"/>
-
-  <!-- Äußerer Kreis (Teller-Ring) -->
-  <circle cx="256" cy="256" r="195" fill="none" stroke="#2a3d2a" stroke-width="12"/>
-
-  <!-- Teller -->
-  <circle cx="256" cy="256" r="155" fill="#162016"/>
-
-  <!-- Salatblatt links -->
-  <ellipse cx="195" cy="230" rx="55" ry="35" fill="#5aad30" transform="rotate(-30 195 230)"/>
-  <ellipse cx="195" cy="230" rx="55" ry="35" fill="#7ec850" transform="rotate(-30 195 230)" opacity="0.7"/>
-  <!-- Blattader -->
-  <path d="M165 248 Q195 220 228 218" stroke="#3d8a20" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-
-  <!-- Salatblatt rechts -->
-  <ellipse cx="318" cy="225" rx="55" ry="32" fill="#5aad30" transform="rotate(25 318 225)"/>
-  <ellipse cx="318" cy="225" rx="55" ry="32" fill="#7ec850" transform="rotate(25 318 225)" opacity="0.7"/>
-  <path d="M290 215 Q318 230 347 238" stroke="#3d8a20" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-
-  <!-- Tomate -->
-  <circle cx="230" cy="278" r="30" fill="#e05050"/>
-  <circle cx="230" cy="278" r="30" fill="url(#tomGrad)"/>
-  <!-- Tomatenstiel -->
-  <path d="M230 250 Q225 242 220 238" stroke="#5aad30" stroke-width="3" fill="none" stroke-linecap="round"/>
-  <path d="M230 250 Q235 241 240 238" stroke="#5aad30" stroke-width="3" fill="none" stroke-linecap="round"/>
-  <!-- Tomaten-Glanz -->
-  <ellipse cx="222" cy="268" rx="7" ry="5" fill="rgba(255,255,255,0.25)" transform="rotate(-20 222 268)"/>
-
-  <!-- Hähnchen / Protein-Stück -->
-  <ellipse cx="295" cy="282" rx="38" ry="28" fill="#c8822a" transform="rotate(-10 295 282)"/>
-  <ellipse cx="295" cy="282" rx="38" ry="28" fill="url(#chickenGrad)" transform="rotate(-10 295 282)"/>
-  <!-- Grillstreifen -->
-  <path d="M272 275 Q295 268 318 274" stroke="rgba(0,0,0,0.25)" stroke-width="3" fill="none" stroke-linecap="round"/>
-  <path d="M270 284 Q293 277 316 283" stroke="rgba(0,0,0,0.2)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-
-  <!-- Quinoa / Körner -->
-  <circle cx="254" cy="300" r="5" fill="#e8d050" opacity="0.9"/>
-  <circle cx="263" cy="293" r="4" fill="#e8d050" opacity="0.8"/>
-  <circle cx="245" cy="293" r="4" fill="#e8d050" opacity="0.8"/>
-  <circle cx="258" cy="308" r="4" fill="#d4bc40" opacity="0.7"/>
-
-  <!-- Gurken-Scheibe -->
-  <ellipse cx="200" cy="290" rx="18" ry="12" fill="#70c858" transform="rotate(15 200 290)"/>
-  <ellipse cx="200" cy="290" rx="14" ry="9" fill="#50a840" transform="rotate(15 200 290)"/>
-  <ellipse cx="200" cy="290" rx="8" ry="5" fill="#90e870" opacity="0.6" transform="rotate(15 200 290)"/>
-
-  <!-- Glanz-Highlight oben -->
-  <ellipse cx="200" cy="155" rx="60" ry="20" fill="rgba(168,224,112,0.08)"/>
-
-  <!-- Gradients -->
-  <defs>
-    <radialGradient id="tomGrad" cx="40%" cy="35%">
-      <stop offset="0%" stop-color="#f07070"/>
-      <stop offset="100%" stop-color="#c03030"/>
-    </radialGradient>
-    <radialGradient id="chickenGrad" cx="35%" cy="30%">
-      <stop offset="0%" stop-color="#e09840"/>
-      <stop offset="100%" stop-color="#a86018"/>
-    </radialGradient>
-  </defs>
-
-  <!-- Akzent-Punkte außen -->
-  <circle cx="256" cy="68" r="6" fill="#7ec850" opacity="0.6"/>
-  <circle cx="440" cy="175" r="5" fill="#7ec850" opacity="0.4"/>
-  <circle cx="440" cy="337" r="5" fill="#7ec850" opacity="0.4"/>
-  <circle cx="256" cy="444" r="6" fill="#7ec850" opacity="0.6"/>
-  <circle cx="72" cy="337" r="5" fill="#7ec850" opacity="0.4"/>
-  <circle cx="72" cy="175" r="5" fill="#7ec850" opacity="0.4"/>
+  <rect width="512" height="512" rx="80" fill="#0f1117"/>
+  <rect x="60" y="60" width="392" height="392" rx="60" fill="#1a1d27"/>
+  <!-- Euro symbol -->
+  <text x="256" y="330" font-family="Georgia,serif" font-size="260" font-weight="bold" fill="#6ee7b7" text-anchor="middle">€</text>
+  <!-- Small chart bars at bottom -->
+  <rect x="90" y="390" width="50" height="60" rx="6" fill="#2e3352"/>
+  <rect x="160" y="360" width="50" height="90" rx="6" fill="#2e3352"/>
+  <rect x="230" y="370" width="50" height="80" rx="6" fill="#6ee7b7" opacity="0.4"/>
+  <rect x="300" y="340" width="50" height="110" rx="6" fill="#2e3352"/>
+  <rect x="370" y="355" width="50" height="95" rx="6" fill="#2e3352"/>
 </svg>

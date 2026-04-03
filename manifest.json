@@ -1,27 +1,16 @@
 {
-  "name": "NutriCoach",
-  "short_name": "NutriCoach",
-  "description": "Dein persönlicher KI-Ernährungsberater für eiweißreiche, budgetfreundliche Ernährung",
+  "name": "Meine Finanzen",
+  "short_name": "Finanzen",
+  "description": "Persönliche Finanz-App mit Einnahmen, Ausgaben und Fixkosten",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#0f1a0f",
-  "theme_color": "#0f1a0f",
-  "categories": ["food", "health", "fitness"],
+  "background_color": "#0f1117",
+  "theme_color": "#0f1117",
   "lang": "de",
   "icons": [
-    {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
-    }
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
   ]
 }
