@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#0f1117"/>
+  <rect x="60" y="60" width="392" height="392" rx="60" fill="#1a1d27"/>
+  <!-- Euro symbol -->
+  <text x="256" y="330" font-family="Georgia,serif" font-size="260" font-weight="bold" fill="#6ee7b7" text-anchor="middle">€</text>
+  <!-- Small chart bars at bottom -->
+  <rect x="90" y="390" width="50" height="60" rx="6" fill="#2e3352"/>
+  <rect x="160" y="360" width="50" height="90" rx="6" fill="#2e3352"/>
+  <rect x="230" y="370" width="50" height="80" rx="6" fill="#6ee7b7" opacity="0.4"/>
+  <rect x="300" y="340" width="50" height="110" rx="6" fill="#2e3352"/>
+  <rect x="370" y="355" width="50" height="95" rx="6" fill="#2e3352"/>
+</svg>
